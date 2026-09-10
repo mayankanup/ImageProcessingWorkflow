@@ -1,0 +1,4 @@
+temporalio
+pillow
+requests
+pandas
