@@ -35,6 +35,9 @@ services:
     restart: unless-stopped
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
+      - OUTPUT_DIR=/output
+    volumes:
+      - C:/temp/imageprocessingworkflow:/output
     depends_on:
       - temporal
 
@@ -44,6 +47,9 @@ services:
     restart: unless-stopped
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
+      - OUTPUT_DIR=/output
+    volumes:
+      - C:/temp/imageprocessingworkflow:/output
     depends_on:
       - temporal
 
@@ -53,6 +59,9 @@ services:
     restart: unless-stopped
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
+      - OUTPUT_DIR=/output
+    volumes:
+      - C:/temp/imageprocessingworkflow:/output
     depends_on:
       - temporal
 

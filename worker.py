@@ -5,6 +5,7 @@ from datetime import timedelta
 import os
 
 TEMPORAL_ADDRESS = os.getenv("TEMPORAL_ADDRESS", "localhost:7233")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
 
 # --- Activities ---
 # NOTE: third-party imports (requests, PIL) are done inside activities
@@ -42,9 +43,18 @@ async def apply_grayscale(image_bytes: bytes) -> bytes:
 
 @activity.defn
 async def save_image(image_bytes: bytes, filename="output.png") -> str:
-    with open(filename, "wb") as f:
+    # Each workflow run gets its own folder named by workflow ID
+    # (e.g. output/image-pipeline-0-1789033885/output.png) so concurrent
+    # runs never overwrite each other. The ID already embeds the client
+    # index + timestamp, which is the race-free equivalent of
+    # output1.png, output2.png, ... (a shared counter would race
+    # across workers).
+    run_dir = os.path.join(OUTPUT_DIR, activity.info().workflow_id)
+    os.makedirs(run_dir, exist_ok=True)
+    path = os.path.join(run_dir, os.path.basename(filename))
+    with open(path, "wb") as f:
         f.write(image_bytes)
-    return filename
+    return path
 
 # --- Workflow ---
 @workflow.defn

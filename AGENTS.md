@@ -19,10 +19,14 @@ python client.py                 # submit workflows (needs worker running)
 
 Order matters: Temporal → worker(s) → client, otherwise workflows sit pending.
 
+## Output
+
+- `OUTPUT_DIR` env controls where images land (default `./output`; compose sets `/output` mounted to `C:\temp\imageprocessingworkflow` on the host).
+- `save_image` writes `OUTPUT_DIR/<workflow-id>/output.png` using `activity.info().workflow_id` — the ID embeds client index + timestamp (`image-pipeline-{idx}-{ts}`), the race-free equivalent of `output1.png`, `output2.png`. Never revert to a shared flat filename.
+
 ## Gotchas
 
 - Temporal address comes from `TEMPORAL_ADDRESS` env (default `localhost:7233`); compose sets `temporal:7233`. Never hardcode `localhost` for in-container code.
 - Workflow sandbox: keep third-party imports (`requests`, `PIL`) inside activity functions, never at module top-level, or `Worker` fails with `Failed validating workflow ImagePipelineWorkflow` / `RestrictedWorkflowAccessError`. Timeouts must be `timedelta`, not bare ints.
-- `image_urls.csv` contains placeholder `example.com` URLs — replace with real image URLs for a real run.
-- `save_image` always writes `output.png`, so concurrent workflows overwrite each other; use a unique filename per workflow id when fixing.
+- `image_urls.csv` must quote URLs containing commas (e.g. `?resize=980,654`) or `pd.read_csv` throws `ParserError`.
 - `client.py` uses blocking `time.sleep` inside `async` (should be `await asyncio.sleep`); `worker.py` activities use blocking `requests.get` inside `async defn` (blocks the event loop).
